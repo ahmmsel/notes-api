@@ -6,13 +6,13 @@ const noteSchema = new mongoose.Schema({
     required: true,
 		ref: "Uesr"
   },
-  name: {
+  title: {
     type: String,
-    required: [true, "note name is required"]
+    required: [true, "note title is required"]
   },
-  description: {
+  body: {
     type: String,
-    required: [true, "note name is required"]
+    required: [true, "note body is required"]
   }
 },{
   timestamps: true

@@ -2,17 +2,19 @@ import asyncHandler from "express-async-handler"
 import Note from "../model/note-model.js"
 
 const allNotes = asyncHandler(async (req, res) => {
-  const note = await Note.find()
+  const { user: { id } } = req
+  const note = await Note.find({ user: id })
   res.json(note)
 })
 
 const createNote = asyncHandler(async (req, res) => {
-  const { name, description } = req.body
+  const { body: { title, body }, user: { id }  } = req
 
-  if (name.trim() && description.trim()) {
+  if (body.trim() && title.trim()) {
     const note = await Note.create({
-      name,
-      description
+      title,
+      body,
+      user: id
     })
     res.status(201).json(note)
   } else {  
@@ -35,8 +37,13 @@ const singleNote = asyncHandler(async (req, res) => {
 })
 
 const updateNote = asyncHandler(async (req, res) => {
-  const { noteId } = req.params
+  const { params: { noteId }, user } = req
   const note = await Note.findById(noteId)
+
+  if (note.user.toString() !== user.id) {
+    res.status(401)
+    throw new Error("you cannot update this")
+  }
 
   if (!note) {
     res.status(400)
@@ -51,16 +58,22 @@ const updateNote = asyncHandler(async (req, res) => {
 }) 
 
 const deleteNote = asyncHandler(async (req, res) => {
-  const note = await Note.findById(req.params.noteId)
+  const { params: { noteId }, user } = req
+  const note = await Note.findById(noteId)
 
   if (!note) {
     res.status(400)
     throw new Error("not found note with this id")
   }
 
+  if (note.user.toString() !== user.id) {
+    res.status(401)
+    throw new Error("you cannot delete this")
+  }
+  
   note.remove()
 
-  res.status(200).json({ message: "deleted successfully" })
+  res.status(200).json({ id: noteId })
 })
 
 export {
